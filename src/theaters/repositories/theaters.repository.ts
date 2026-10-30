@@ -1,3 +1,5 @@
+// Este repository se usa para reportes (consultas) especializada, si es basico tipo CRUD el del service funciona bien
+
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';

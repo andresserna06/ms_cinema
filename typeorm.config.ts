@@ -1,3 +1,4 @@
+// Archivo equivalente a JPA, para el manejo de consultas a la base de datos
 import { DataSource } from 'typeorm';
 import 'dotenv/config';
 

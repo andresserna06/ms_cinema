@@ -1,8 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { TheaterDto } from './dto/theater.dto';
+import { Repository } from 'typeorm'; // Equivalente a JPA
+import { CreateTheaterDto } from './dto/create-theater.dto';
 import { TheaterResponseDto } from './dto/theater-response.dto';
+import { UpdateTheaterDto } from './dto/update-theater.dto';
 import { TheaterMapper } from './mappers/theater.mapper';
 import { TheatersRepository } from './repositories/theaters.repository';
 import { Theater } from './entities/theater.entity';
@@ -10,37 +11,42 @@ import { Theater } from './entities/theater.entity';
 @Injectable()
 export class TheatersService {
   constructor(
-    @InjectRepository(Theater)
-    private readonly theatersRepository: Repository<Theater>,
+    @InjectRepository(Theater) //
+    private readonly theatersRepository: Repository<Theater>, // En estas dos lineas tengo la conexión a la base de datos donde puedo hacer consultas basicas tipo CRUD
     private readonly customTheatersRepository: TheatersRepository,
     private readonly theaterMapper: TheaterMapper,
   ) {}
+  // Si quiero hacer reportes (consultas) personalizadas debo crear otro repository para esas consultas, en el serice es para las operaciones basicas de CRUD
 
-  async create(dto: TheaterDto): Promise<TheaterResponseDto> {
-    if (dto.location === undefined || dto.capacity === undefined) {
-      throw new BadRequestException('location and capacity are required for create');
-    }
-
+  async create(dto: CreateTheaterDto): Promise<TheaterResponseDto> {
     const entity = this.theaterMapper.toEntity(dto);
-    const saved = await this.theatersRepository.save(entity);
+    const saved = await this.theatersRepository.save(entity); // El await lo que hace es que espera para responderle al usuario SOLO cuando la petición se resuelva en la base de datos, se usa para ahorrar tiempo de computo
     return this.theaterMapper.toResponseDto(saved);
   }
 
   async findAll(): Promise<TheaterResponseDto[]> {
-    const theaters = await this.theatersRepository.find();
+    const theaters = await this.theatersRepository.find({
+      relations: { projector: true },
+    });
     return this.theaterMapper.toResponseDtoList(theaters);
   }
 
   async findOne(id: number): Promise<TheaterResponseDto> {
-    const theater = await this.theatersRepository.findOne({ where: { id } });
+    const theater = await this.theatersRepository.findOne({
+      where: { id },
+      relations: { projector: true },
+    });
     if (!theater) {
       throw new NotFoundException(`Theater with id ${id} not found`);
     }
     return this.theaterMapper.toResponseDto(theater);
   }
 
-  async update(id: number, dto: TheaterDto): Promise<TheaterResponseDto> {
-    const theater = await this.theatersRepository.findOne({ where: { id } });
+  async update(id: number, dto: UpdateTheaterDto): Promise<TheaterResponseDto> {
+    const theater = await this.theatersRepository.findOne({
+      where: { id },
+      relations: { projector: true },
+    });
     if (!theater) {
       throw new NotFoundException(`Theater with id ${id} not found`);
     }
